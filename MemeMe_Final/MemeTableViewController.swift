@@ -9,22 +9,54 @@
 import Foundation
 import UIKit
 
-class MemeTableViewController: UIViewController{
+class MemeTableViewController: UIViewController,UITableViewDataSource,UITableViewDelegate{
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.addAButton()
-    }
-    
-    func addAButton(){
-        var addButton = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "addNewMeme")
-        navigationItem.rightBarButtonItem = addButton
-        
-        navigationController!.navigationBar.barTintColor = UIColor.grayColor()
        
     }
     
-    func addNewMeme(){
+    var memes: [Meme]!
+    
+    @IBOutlet weak var tableView: UITableView!
+
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        let object = UIApplication.sharedApplication().delegate
+        let appDelegate = object as! AppDelegate
+        memes = appDelegate.memes
+        tableView.reloadData()
+    }
+    
+    @IBAction func addMeme(sender: AnyObject) {
         self.performSegueWithIdentifier("newMeme", sender: nil)
     }
+    
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return self.memes.count
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        let cell : tableViewCell = tableView.dequeueReusableCellWithIdentifier("MemeCell") as! tableViewCell
+        let memesrow = self.memes[indexPath.row]
+        
+        cell.label1.text = memesrow.toptext
+        cell.label2.text = memesrow.bottomtext
+        cell.memeView.image = memesrow.memedImage
+        
+        return cell
+    }
+    
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
+        let detailController = self.storyboard!.instantiateViewControllerWithIdentifier("MemeDetailViewController") as! MemeDetailViewController
+        detailController.meme = self.memes[indexPath.row]
+        self.navigationController!.pushViewController(detailController, animated: true)
+        
+    }
+
 
 }

@@ -27,28 +27,23 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
     @IBOutlet weak var albumButton: UIBarButtonItem!
     
 
+    @IBOutlet weak var shareButton: UIBarButtonItem!
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.addShareButton()
+         shareButton.enabled = false
+        
         imagePicker.delegate = self
         self.topTextField.delegate = self
         self.bottomTextField.delegate = self
-    }
-    
-    func addShareButton(){
-        var shareButton = UIBarButtonItem(title: "Share", style: .Plain, target: nil, action: "shareMeme")//Use a selector
-        navigationItem.rightBarButtonItem = shareButton
         
-        navigationController!.navigationBar.barTintColor = UIColor.grayColor()
-        title = "Create a new meme"
     }
-    
+
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
         //To check if camera is available on the device
-        
+       
         cameraButton.enabled = UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera)
         self.subscribeToKeyboardNotifications()
     }
@@ -56,6 +51,12 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
         self.unsubscribeFromKeyboardNotifications()
+    }
+    
+    
+    
+    @IBAction func cancelMeme(sender: AnyObject) {
+        self.dismissViewControllerAnimated(true, completion: nil)
     }
     
     //Subscribing to keyboard notifications
@@ -112,6 +113,7 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage{
             imageView.image = pickedImage
+            shareButton.enabled = true
         }
         dismissViewControllerAnimated(true, completion: nil)
         
@@ -129,6 +131,8 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
         takeaphoto.sourceType = .Camera
         
         self.presentViewController(takeaphoto, animated: true, completion: nil)
+        shareButton.enabled = true       
+
     }
     
     //Assigning attributes to text fields
@@ -151,11 +155,34 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
         bottomTextField.resignFirstResponder()
         return true
     }
+    
+    @IBAction func shareMeme(sender: AnyObject) {
+        let image : UIImage = generateMemedImage()
+        let nextController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        self.presentViewController(nextController, animated: true, completion: nil)
+        nextController.completionWithItemsHandler = {(activityType,completed : Bool,[AnyObject]!,NSError) in
+            if !completed{
+                println("cancelled")
+                return
+            }else{
+                self.save()
+                self.dismissViewControllerAnimated(true, completion: nil)
+            }
+        }
+
+    }
+    
+
 
     //Create the meme
     
     func save(){
         var meme = Meme(toptext: topTextField.text, bottomtext: bottomTextField.text, image: imageView.image!, memedImage: generateMemedImage())
+        
+        // Add it to the memes array in the Application Delegate
+        let object = UIApplication.sharedApplication().delegate
+        let appDelegate = object as! AppDelegate
+        appDelegate.memes.append(meme)
     }
     
     func generateMemedImage() -> UIImage{
@@ -168,11 +195,14 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
         self.view.drawViewHierarchyInRect(self.view.frame, afterScreenUpdates: true)
         let memedImage : UIImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        return memedImage
         
         //To show nav bar and toolbar
         self.navigationController?.navigationBarHidden = false
         self.navigationController?.toolbarHidden = false
+        
+        return memedImage
+        
+       
     }
 
     

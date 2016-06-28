@@ -9,10 +9,13 @@
 import UIKit
 
 class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate,UINavigationControllerDelegate,UITextFieldDelegate {
+    var memeIndex:Int?
+    var meme: Meme?
+    
     
     let textFieldAttributes = [ NSStrokeColorAttributeName : UIColor.blackColor(),        NSForegroundColorAttributeName : UIColor.whiteColor(),
         NSFontAttributeName : UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
-        NSStrokeWidthAttributeName : 3.0]
+        NSStrokeWidthAttributeName : -2.0]
     
     let imagePicker = UIImagePickerController()
     
@@ -28,14 +31,28 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
     
 
     @IBOutlet weak var shareButton: UIBarButtonItem!
+    
+    @IBOutlet weak var navBar: UINavigationBar!
+    
+    
+    @IBOutlet weak var toolBar: UIToolbar!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-         shareButton.enabled = false
+        
         
         imagePicker.delegate = self
         self.topTextField.delegate = self
         self.bottomTextField.delegate = self
         
+        if let existingMeme = meme {
+            topTextField.text = existingMeme.toptext
+            bottomTextField.text = existingMeme.bottomtext
+            imageView.image = existingMeme.image
+            shareButton.enabled = true
+        }else{
+            shareButton.enabled=false
+        }
     }
 
     
@@ -144,8 +161,6 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
         bottomTextField.clearsOnBeginEditing = false
         topTextField.textAlignment = .Center
         bottomTextField.textAlignment = .Center
-        
-        
     }
     
     //To move out of text editing when return is pressed
@@ -159,21 +174,18 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
     @IBAction func shareMeme(sender: AnyObject) {
         let image : UIImage = generateMemedImage()
         let nextController = UIActivityViewController(activityItems: [image], applicationActivities: nil)
-        self.presentViewController(nextController, animated: true, completion: nil)
-        nextController.completionWithItemsHandler = {(activityType,completed : Bool,[AnyObject]!,NSError) in
-            if !completed{
-                println("cancelled")
-                return
-            }else{
-                self.save()
-                self.dismissViewControllerAnimated(true, completion: nil)
-            }
+        
+        nextController.completionWithItemsHandler = { (
+            activityType: String!,
+            completed: Bool,
+            returnedItems: [AnyObject]!,
+            activityError: NSError!) -> Void in
+            self.save()
+            self.dismissViewControllerAnimated(true, completion: nil)
         }
-
+        presentViewController(nextController, animated: true, completion: nil)
     }
     
-
-
     //Create the meme
     
     func save(){
@@ -182,13 +194,19 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
         // Add it to the memes array in the Application Delegate
         let object = UIApplication.sharedApplication().delegate
         let appDelegate = object as! AppDelegate
-        appDelegate.memes.append(meme)
+        
+        if memeIndex != nil {
+            appDelegate.memes[memeIndex!] = meme
+        } else {
+            appDelegate.memes.append(meme)
+        }
+       
     }
     
     func generateMemedImage() -> UIImage{
         //To hide nav bar and toolbar
-        self.navigationController?.navigationBarHidden = true
-        self.navigationController?.toolbarHidden = true
+        self.navBar.hidden = true
+        self.toolBar.hidden = true
         
         //Render view to an image
         UIGraphicsBeginImageContext(self.view.frame.size)
@@ -197,18 +215,11 @@ class MemeEditorViewController: UIViewController,UIImagePickerControllerDelegate
         UIGraphicsEndImageContext()
         
         //To show nav bar and toolbar
-        self.navigationController?.navigationBarHidden = false
+        self.navBar.hidden = false
+        self.toolBar.hidden = false
         self.navigationController?.toolbarHidden = false
         
         return memedImage
-        
-       
-    }
-
-    
-    
-    
-    
-    
+        }
 }
 

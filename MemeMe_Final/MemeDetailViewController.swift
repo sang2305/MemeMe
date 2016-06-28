@@ -14,13 +14,29 @@ class MemeDetailViewController : UIViewController{
     @IBOutlet weak var fullMemeView: UIImageView!
     
     var meme : Meme!
+    var memeIndex: Int!
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
+         self.tabBarController?.tabBar.hidden = true
         
-        self.fullMemeView.image = meme.memedImage
+        fullMemeView.image = meme.memedImage
     }
     
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.tabBarController?.tabBar.hidden = false
+    }
+    
+        
+    @IBAction func editMeme(sender: AnyObject) {
+        let editorController = storyboard?.instantiateViewControllerWithIdentifier("MemeEditorViewController") as! MemeEditorViewController
+        
+        editorController.memeIndex = memeIndex
+        editorController.meme = meme
+        
+        presentViewController(editorController, animated: true, completion: nil )
+    }
     
 }
 

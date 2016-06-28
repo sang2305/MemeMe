@@ -10,12 +10,9 @@ import Foundation
 import UIKit
 
 class MemeTableViewController: UIViewController,UITableViewDataSource,UITableViewDelegate{
-    override func viewDidLoad() {
-        super.viewDidLoad()
-       
-    }
     
     var memes: [Meme]!
+    
     
     @IBOutlet weak var tableView: UITableView!
 
@@ -26,6 +23,7 @@ class MemeTableViewController: UIViewController,UITableViewDataSource,UITableVie
         let object = UIApplication.sharedApplication().delegate
         let appDelegate = object as! AppDelegate
         memes = appDelegate.memes
+        
         tableView.reloadData()
     }
     
@@ -50,11 +48,31 @@ class MemeTableViewController: UIViewController,UITableViewDataSource,UITableVie
         return cell
     }
     
+    func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return true
+    }
+    
+    func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+        
+        if (editingStyle == UITableViewCellEditingStyle.Delete){
+        memes.removeAtIndex(indexPath.row)
+        
+        tableView.beginUpdates()
+        tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+        tableView.endUpdates()
+        }
+        
+    }
+
+    
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         
         let detailController = self.storyboard!.instantiateViewControllerWithIdentifier("MemeDetailViewController") as! MemeDetailViewController
-        detailController.meme = self.memes[indexPath.row]
+        detailController.meme = memes[indexPath.row]
+        
         self.navigationController!.pushViewController(detailController, animated: true)
+        
+        
         
     }
 
